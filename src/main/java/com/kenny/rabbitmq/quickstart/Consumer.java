@@ -14,22 +14,29 @@ public class Consumer {
         connectionFactory.setVirtualHost("/");
         connectionFactory.setUsername("admin");
         connectionFactory.setPassword("password");
+        connectionFactory.setRequestedHeartbeat(10000);
 
         try (Connection connection = connectionFactory.newConnection();
-            Channel channel = connection.createChannel()) {
+             Channel channel = connection.createChannel()) {
 
-           String queueName = "test001";
-           channel.queueDeclare(queueName, true, false, false, null);
+            String exchangeName = "test_confirm_exchange";
+            String routingKey = "confirm.#";
+            String queueName = "test_confirm_queue";
 
-           DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-               String message = new String(delivery.getBody());
-               System.out.println("Received: " + message);
-           };
 
-           channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
-           });
+            channel.exchangeDeclare(exchangeName, "topic", true);
+            channel.queueDeclare(queueName, true, false, false, null);
+            channel.queueBind(queueName, exchangeName, routingKey);
 
-           Thread.sleep(Long.MAX_VALUE);
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody());
+                System.out.println("Received: " + message);
+            };
+
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {
+            });
+
+            Thread.sleep(Long.MAX_VALUE);
         }
     }
 }
