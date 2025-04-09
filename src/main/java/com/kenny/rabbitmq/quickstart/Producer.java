@@ -44,6 +44,10 @@ public class Producer {
             Thread.sleep(1000);
         }
 
+
+        channel.waitForConfirmsOrDie();
+        System.out.println("All messages acknowledged by RabbitMQ!");
+
         channel.close();
         connection.close();
     }
